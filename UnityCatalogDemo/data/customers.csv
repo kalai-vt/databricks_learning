@@ -1,0 +1,21 @@
+customer_id,customer_name,email,city,state,signup_date,segment
+C001,Aarav Sharma,aarav.sharma@example.com,Mumbai,Maharashtra,2022-01-15,Consumer
+C002,Priya Nair,priya.nair@example.com,Bengaluru,Karnataka,2022-02-10,Consumer
+C003,Rohan Mehta,rohan.mehta@example.com,Delhi,Delhi,2022-02-21,Corporate
+C004,Sneha Iyer,sneha.iyer@example.com,Chennai,Tamil Nadu,2022-03-05,Consumer
+C005,Karan Malhotra,karan.malhotra@example.com,Pune,Maharashtra,2022-03-18,Corporate
+C006,Ananya Gupta,ananya.gupta@example.com,Hyderabad,Telangana,2022-04-02,Consumer
+C007,Vikram Rao,vikram.rao@example.com,Kolkata,West Bengal,2022-04-19,Home Office
+C008,Ishita Desai,ishita.desai@example.com,Ahmedabad,Gujarat,2022-05-07,Consumer
+C009,Arjun Kapoor,arjun.kapoor@example.com,Jaipur,Rajasthan,2022-05-25,Corporate
+C010,Meera Pillai,meera.pillai@example.com,Kochi,Kerala,2022-06-11,Consumer
+C011,Aditya Verma,aditya.verma@example.com,Lucknow,Uttar Pradesh,2022-06-30,Home Office
+C012,Divya Menon,divya.menon@example.com,Coimbatore,Tamil Nadu,2022-07-14,Consumer
+C013,Siddharth Joshi,siddharth.joshi@example.com,Nagpur,Maharashtra,2022-08-02,Corporate
+C014,Kavya Reddy,kavya.reddy@example.com,Vijayawada,Andhra Pradesh,2022-08-20,Consumer
+C015,Nikhil Bansal,nikhil.bansal@example.com,Chandigarh,Punjab,2022-09-09,Home Office
+C016,Riya Choudhury,riya.choudhury@example.com,Guwahati,Assam,2022-09-27,Consumer
+C017,Manish Agarwal,manish.agarwal@example.com,Indore,Madhya Pradesh,2022-10-15,Corporate
+C018,Pooja Saxena,pooja.saxena@example.com,Bhopal,Madhya Pradesh,2022-11-03,Consumer
+C019,Rahul Bhatt,rahul.bhatt@example.com,Surat,Gujarat,2022-11-21,Home Office
+C020,Neha Kulkarni,neha.kulkarni@example.com,Nashik,Maharashtra,2022-12-08,Consumer

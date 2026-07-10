@@ -1,0 +1,21 @@
+employee_id,employee_name,department_id,job_title,hire_date,salary,email
+E101,Rajesh Kumar,D01,Sales Manager,2018-03-01,1450000,rajesh.kumar@retailcorp.com
+E102,Sunita Rao,D02,HR Manager,2017-06-15,1350000,sunita.rao@retailcorp.com
+E103,Anil Kapoor,D03,Finance Manager,2016-11-20,1550000,anil.kapoor@retailcorp.com
+E104,Deepika Shah,D04,Marketing Manager,2019-01-10,1250000,deepika.shah@retailcorp.com
+E105,Vivek Nair,D05,IT Manager,2018-07-22,1400000,vivek.nair@retailcorp.com
+E106,Lakshmi Menon,D06,Support Manager,2019-09-05,1150000,lakshmi.menon@retailcorp.com
+E107,Amit Trivedi,D01,Sales Executive,2020-02-14,650000,amit.trivedi@retailcorp.com
+E108,Neelam Sharma,D01,Sales Executive,2020-05-19,620000,neelam.sharma@retailcorp.com
+E109,Rakesh Yadav,D01,Sales Executive,2021-01-11,600000,rakesh.yadav@retailcorp.com
+E110,Sonal Mishra,D02,HR Executive,2020-03-25,580000,sonal.mishra@retailcorp.com
+E111,Tarun Chawla,D02,HR Executive,2021-04-08,560000,tarun.chawla@retailcorp.com
+E112,Kritika Ahuja,D03,Finance Analyst,2020-06-30,700000,kritika.ahuja@retailcorp.com
+E113,Manoj Pillai,D03,Finance Analyst,2021-02-17,680000,manoj.pillai@retailcorp.com
+E114,Swati Bhatt,D03,Accountant,2019-10-12,610000,swati.bhatt@retailcorp.com
+E115,Harish Reddy,D04,Marketing Executive,2021-05-23,590000,harish.reddy@retailcorp.com
+E116,Payal Jain,D04,Marketing Executive,2022-01-09,570000,payal.jain@retailcorp.com
+E117,Suresh Iyer,D05,Data Engineer,2020-08-14,950000,suresh.iyer@retailcorp.com
+E118,Nandini Rao,D05,Data Analyst,2021-03-02,750000,nandini.rao@retailcorp.com
+E119,Farhan Sheikh,D05,Cloud Engineer,2022-02-18,980000,farhan.sheikh@retailcorp.com
+E120,Geeta Krishnan,D06,Support Executive,2021-07-27,520000,geeta.krishnan@retailcorp.com

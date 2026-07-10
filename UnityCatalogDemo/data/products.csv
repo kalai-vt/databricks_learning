@@ -1,0 +1,21 @@
+product_id,product_name,category,brand,unit_price
+P001,Wireless Mouse,Electronics,LogiTech Pro,799.00
+P002,Bluetooth Headphones,Electronics,SoundWave,2499.00
+P003,Cotton T-Shirt,Apparel,UrbanThreads,599.00
+P004,Running Shoes,Footwear,SprintFit,3299.00
+P005,Stainless Steel Bottle,Home & Kitchen,HydroLife,449.00
+P006,Yoga Mat,Sports & Fitness,FlexiFit,999.00
+P007,LED Desk Lamp,Home & Kitchen,BrightHome,1299.00
+P008,Backpack,Accessories,TrailPack,1899.00
+P009,Smart Watch,Electronics,PulseTech,5999.00
+P010,Denim Jeans,Apparel,UrbanThreads,1599.00
+P011,Non-Stick Frying Pan,Home & Kitchen,ChefPro,1199.00
+P012,Wireless Keyboard,Electronics,LogiTech Pro,1499.00
+P013,Sports Cap,Accessories,TrailPack,349.00
+P014,Formal Shirt,Apparel,ClassicWear,1099.00
+P015,Fitness Tracker Band,Electronics,PulseTech,2999.00
+P016,Table Lamp,Home & Kitchen,BrightHome,899.00
+P017,Leather Wallet,Accessories,UrbanThreads,999.00
+P018,Trekking Shoes,Footwear,SprintFit,3999.00
+P019,Ceramic Mug Set,Home & Kitchen,HydroLife,599.00
+P020,Gym Gloves,Sports & Fitness,FlexiFit,499.00
