@@ -124,5 +124,30 @@ follow-up questions first).
 | RBAC | 3 locks: catalog + schema + object privilege | `GRANT` / `REVOKE` |
 | Lineage | Automatic, zero-config dependency tracking | Catalog Explorer → Lineage tab |
 
+## With Catalog vs Without Unity Catalog — Side by Side
+
+The same 9 concepts, but showing what changes if Unity Catalog **isn't** there (the old,
+workspace-scoped Hive Metastore world) versus what you get **with** it. This is the fastest way to
+make the "why does this matter?" question click for a beginner.
+
+| Concept | ❌ Without Unity Catalog (Hive Metastore) | ✅ With Unity Catalog | Command (with UC) |
+|---|---|---|---|
+| **Metastore** | One metastore **per workspace** — Sales, HR, Finance each have their own, invisible to each other | **One** metastore per region, shared by every workspace | `SELECT CURRENT_METASTORE();` |
+| **Catalog** | Doesn't exist — no such level at all | Top level of the name; one per team/dept (`retail_sales`, `retail_hr`) | `CREATE CATALOG` |
+| **Namespace** | 2-level: `database.table` | 3-level: `catalog.schema.table` — an extra layer to separate departments | `catalog.schema.table` |
+| **Schema** | The top level itself (a "database") | A folder **inside** a catalog — one level lower than before | `CREATE SCHEMA` |
+| **Managed Table** | Table's storage path is whatever the cluster/admin set up by hand; cleanup is manual | UC auto-picks and owns the storage path; `DROP TABLE` cleanly deletes data too | `CREATE TABLE` (no LOCATION) |
+| **External Table** | A `LOCATION` path with no central record of *who* is allowed to read it | Governed by a Storage Credential + External Location; access is GRANT-able like any table | `CREATE TABLE ... LOCATION '...'` |
+| **View** | Works, but permission enforcement on it depends on the cluster's ACL config | Saved query, governed identically to a table, everywhere | `CREATE VIEW` |
+| **Volume / Files** | Raw files sit in ungoverned DBFS mounts — no GRANT, no audit | Governed, GRANT-able file storage, same rules as tables | `CREATE VOLUME` |
+| **RBAC** | Table-level ACLs, enforced only on specifically configured clusters — easy to bypass | 3 locks required everywhere: `USE CATALOG` + `USE SCHEMA` + object privilege | `GRANT` / `REVOKE` |
+| **Lineage** | Doesn't exist — you'd trace it by reading code or asking around | Automatic, zero-config, table + column level | Catalog Explorer → Lineage tab |
+| **Cross-department query** | Hard/impossible — each workspace's metastore can't see the others | One `SELECT` can join tables across two catalogs in a single statement | `SELECT ... FROM cat_a.s.t1 JOIN cat_b.s.t2` |
+| **Auditing "who accessed what"** | Manual, per-cluster logs, easy to miss | Centralized, queryable system table | `SELECT * FROM system.access.audit;` |
+
+**The takeaway to say out loud:** "Unity Catalog doesn't just add a `catalog` word to your table
+names — it replaces per-workspace, per-cluster, inconsistently-enforced rules with **one governed
+layer** that every workspace, every cluster, and every BI tool obeys the same way."
+
 Want the full enterprise-realistic version with security personas, external storage, and Power BI
 lineage? See the main demo one level up: `../README.md`.

@@ -15,6 +15,15 @@ Only have 20–25 minutes, or want the simplest possible walkthrough? Start with
 tables, a single `hands_on.sql` script covering every core concept with minimal setup. Come back
 here for the full 45–60 minute enterprise-realistic version.
 
+## New to the Platform Setup Side? Start Even Earlier
+
+If your course/session covers **Metastore creation, cluster access modes, and cloud storage
+credentials** first (the admin/platform setup side, before any catalog exists), start with
+[`platform_setup_demo/README.md`](./platform_setup_demo/README.md) — a ~30 min companion demo
+covering: Intro to Unity Catalog, the UC vs Hive Metastore object model, creating a Metastore,
+UC-compatible cluster configuration, and configuring Storage Credentials / External Locations for
+cloud storage access.
+
 ## Quick Start (Full Version)
 
 1. **Read first:** `docs/01_concepts_overview.md` for all 21 concepts, and
