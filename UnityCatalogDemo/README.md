@@ -8,7 +8,14 @@ Business scenario: **RetailCorp**, a retail company with three departments — *
 and **Finance** — each with its own catalog, schema, data, and access rules. See
 `docs/02_business_scenario.md` for the full story.
 
-## Quick Start
+## In a Hurry? Short Version First
+
+Only have 20–25 minutes, or want the simplest possible walkthrough? Start with
+[`quickstart_demo/README.md`](./quickstart_demo/README.md) — one catalog, one schema, two tiny
+tables, a single `hands_on.sql` script covering every core concept with minimal setup. Come back
+here for the full 45–60 minute enterprise-realistic version.
+
+## Quick Start (Full Version)
 
 1. **Read first:** `docs/01_concepts_overview.md` for all 21 concepts, and
    `diagrams/architecture_diagrams.md` for the ASCII architecture pictures.
@@ -36,6 +43,10 @@ UnityCatalogDemo/
 │   ├── sales.csv
 │   ├── employees.csv
 │   └── departments.csv
+├── quickstart_demo/                Short (~20-25 min) simplified hands-on version
+│   ├── README.md
+│   ├── hands_on.sql
+│   └── cleanup.sql
 ├── notebooks/                     13 Databricks SQL notebooks (import into a workspace)
 │   ├── 01_Create_Metastore/
 │   ├── 02_Create_Catalogs/
