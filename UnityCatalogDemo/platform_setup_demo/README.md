@@ -45,6 +45,25 @@ permission in a workspace, even without account admin rights.
 5. **Configure Cloud Storage demo** (`05_...sql`) — the full hands-on: create the credential and
    location (UI or SQL), then prove it works by creating a real External Table and querying it.
 
+## With Catalog vs Without Unity Catalog — Side by Side
+
+Same idea as the quickstart demo's cheat sheet, but for the platform/setup layer specifically —
+this is the "why do we even need to do steps 27 and 30?" answer in one glance.
+
+| Concept | ❌ Without Unity Catalog (Hive Metastore) | ✅ With Unity Catalog | Command / Action (with UC) |
+|---|---|---|---|
+| **Metastore** | No explicit object to create — each workspace silently has its own built-in one | Created **once** per region in Account Console, then explicitly attached to every workspace that should share it | Account Console → Create Metastore |
+| **Scope of metadata** | Local to a single workspace; another workspace can't see or reuse it | Shared automatically across every attached workspace in that region | `SELECT CURRENT_METASTORE();` |
+| **Cluster requirements** | Any cluster, any access mode works — nothing to configure | Must use **Single User** or **Shared** access mode + DBR **11.3 LTS+**; a legacy "No Isolation Shared" cluster can't see UC objects at all | Compute → Create Compute → Access Mode |
+| **Cloud storage access** | Set up ad hoc, per cluster: instance profiles, `dbutils.fs.mount`, or hardcoded keys — every cluster/workspace configures it separately | Defined **once**, centrally, as a Storage Credential + External Location — every attached workspace/cluster inherits the same access automatically | `CREATE STORAGE CREDENTIAL`, `CREATE EXTERNAL LOCATION` |
+| **Who can grant storage access** | Whoever configures the cluster (often just a workspace admin) — no per-path control | A Metastore admin controls the credential; regular users only ever get scoped grants like `CREATE EXTERNAL TABLE`/`READ FILES` on one External Location — they never touch the IAM role directly | `GRANT ... ON EXTERNAL LOCATION ...` |
+| **Consistency across workspaces** | Each workspace admin re-does cluster + storage setup independently — configuration drift is common | One Storage Credential/External Location, reused by every attached workspace — no drift, no re-work | Inherent to the shared-Metastore architecture |
+| **Auditing setup changes** | Only whatever your cloud provider logs (e.g. CloudTrail) — nothing at the Databricks level | Metastore/credential/location are governed objects with owners, comments, and a queryable audit trail | `system.access.audit` |
+
+**The takeaway to say out loud:** "Steps 27 and 30 aren't extra bureaucracy — they replace work
+every workspace admin used to redo by hand (mounts, instance profiles, per-cluster IAM) with one
+setup that every workspace, cluster, and user then just inherits for free."
+
 ## After This Demo
 
 Continue into `../quickstart_demo/` (20–25 min, catalogs/schemas/tables/views/RBAC/lineage) or the
