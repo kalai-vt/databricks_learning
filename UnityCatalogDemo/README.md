@@ -26,8 +26,10 @@ cloud storage access.
 
 ## Quick Start (Full Version)
 
-1. **Read first:** `docs/01_concepts_overview.md` for all 21 concepts, and
-   `diagrams/architecture_diagrams.md` for the ASCII architecture pictures.
+1. **Read first:** `docs/01_concepts_overview.md` for all 21 concepts,
+   `docs/03_dbfs_vs_hive_metastore_vs_unity_catalog.md` for the DBFS vs Hive Metastore vs Unity
+   Catalog distinction (a common early point of confusion), and `diagrams/architecture_diagrams.md`
+   for the ASCII architecture pictures.
 2. **Run the demo:** import `notebooks/01..13` into a Databricks workspace in order (they are
    plain-text `.sql` files in Databricks' notebook-source format — File → Import → File in the
    Databricks UI, or use the Databricks CLI/Repos). Each notebook contains explanation, runnable
@@ -90,7 +92,8 @@ UnityCatalogDemo/
 │   └── UnityCatalog_Demo_Slides.pptx
 └── docs/                          Concept reference + business scenario
     ├── 01_concepts_overview.md
-    └── 02_business_scenario.md
+    ├── 02_business_scenario.md
+    └── 03_dbfs_vs_hive_metastore_vs_unity_catalog.md
 ```
 
 ## What This Demo Covers

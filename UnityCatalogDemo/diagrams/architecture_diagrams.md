@@ -165,3 +165,43 @@ Fully-qualified name = catalog.schema.object   e.g.  retail_sales.sales.customer
   Visible in Catalog Explorer → object → "Lineage" tab, or queryable via
   system.access.table_lineage / system.access.column_lineage.
 ```
+
+---
+
+## 7. DBFS vs Hive Metastore vs Unity Catalog — Three Different Layers
+
+```
+   STORAGE LAYER (raw bytes)                       METADATA / GOVERNANCE LAYER
+   ─────────────────────────                       ────────────────────────────
+
+   DBFS                                             (nothing — DBFS has no catalog
+   ────                                              or governance of its own)
+   Distributed filesystem over cloud
+   storage (S3 / ADLS / GCS)
+   dbutils.fs.ls("/mnt/...")
+   ✗ No fine-grained access control
+   ✗ No concept of tables/schemas
+
+
+   Hive Metastore ──points at files on──▶ DBFS      Metadata catalog
+   ──────────────                                   ───────────────
+                                                     database.table  (2-level)
+                                                     ✗ Table-ACLs only, cluster-dependent
+                                                     ✗ Workspace-scoped, no sharing
+                                                     ✗ No lineage
+
+
+   Unity Catalog ──governs both layers directly──   Metadata catalog + Governance
+   ─────────────                                    ─────────────────────────────
+   • Managed storage (auto-provisioned)              catalog.schema.table  (3-level)
+   • Volumes (governed files,                        ✓ Fine-grained GRANT/REVOKE
+     replaces raw DBFS access)                       ✓ Shared across every workspace
+   • External Locations (governed                    ✓ Automatic lineage
+     external cloud paths)                           ✓ Centralized audit logs
+
+   ── One sentence ──
+   DBFS = "where are the bytes." Hive Metastore = "what tables point at those bytes."
+   Unity Catalog = "what tables exist, AND who's allowed to touch them, everywhere."
+```
+
+Full write-up with a hands-on comparison: `../docs/03_dbfs_vs_hive_metastore_vs_unity_catalog.md`.

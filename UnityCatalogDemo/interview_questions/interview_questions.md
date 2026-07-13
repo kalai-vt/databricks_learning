@@ -191,3 +191,17 @@ governance possible.
 **Q: Is Unity Catalog cloud-specific?**
 A: No — it works consistently across AWS, Azure, and GCP Databricks deployments, which is part of
 its value proposition for multi-cloud organizations.
+
+**Q: What's the difference between DBFS, Hive Metastore, and Unity Catalog?**
+A: DBFS is a storage layer — a distributed filesystem over cloud storage, for reading/writing raw
+files with no schema or access control. Hive Metastore is a metadata layer — a catalog mapping
+`database.table` names to file locations (often on DBFS), with only basic, cluster-dependent table
+ACLs. Unity Catalog is a governance layer — it does the metadata-catalog job (with a third
+`catalog` level added) *and* governs the files themselves (via Volumes/External Locations,
+replacing ungoverned DBFS access), plus adds fine-grained GRANT/REVOKE, lineage, and audit logs,
+shared across every workspace. See `../docs/03_dbfs_vs_hive_metastore_vs_unity_catalog.md`.
+
+**Q: Did Hive Metastore govern the files stored on DBFS?**
+A: No. Hive Metastore only stored a *pointer* (path) to where a table's data lived; it never
+controlled who could read/write the underlying files directly on DBFS. That ungoverned gap is
+exactly what Unity Catalog Volumes and External Locations close.
