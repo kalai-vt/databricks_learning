@@ -1,0 +1,6 @@
+# The core application (app/) is intentionally dependency-free — stdlib
+# only — so the live demo runs with a bare `python3` interpreter.
+#
+# These are optional, only needed if you want to:
+pytest>=7.4          # run the automated test suite (tests/)
+anthropic>=0.34       # swap the TemplateGenerator for a real LLM (set ANTHROPIC_API_KEY)
