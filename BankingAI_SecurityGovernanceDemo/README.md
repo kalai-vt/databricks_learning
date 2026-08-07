@@ -64,6 +64,26 @@ See [`diagrams/architecture.md`](diagrams/architecture.md) for the full
 request-flow and isolation diagrams, and
 [`WALKTHROUGH.md`](WALKTHROUGH.md) for the live-demo script.
 
+## Browser console (no install, no server)
+
+[`web/banking_ai_console.html`](web/banking_ai_console.html) is a self-contained, dependency-free
+reimplementation of the same guardrail pipeline (tenancy, PII redaction, prompt-injection
+detection, ethics policy, TF-IDF RAG, tamper-evident audit log) as a single HTML file with
+inline CSS/JS — open it directly in any browser, nothing to install and no server to start.
+It mirrors `app/` line-for-line in behavior and is useful when you want an interactive,
+clickable walkthrough (persona switcher, scenario chips, live audit-log tamper demo, a
+Governance tab with the model card and compliance matrix, and an Attack Simulation tab)
+instead of a terminal session. The Python code in `app/` remains the reference
+implementation — this is a second, presentation-friendly surface over the same logic.
+
+```bash
+# macOS
+open BankingAI_SecurityGovernanceDemo/web/banking_ai_console.html
+# Linux
+xdg-open BankingAI_SecurityGovernanceDemo/web/banking_ai_console.html
+# or just drag the file into any browser window
+```
+
 ## Quick start
 
 ```bash
