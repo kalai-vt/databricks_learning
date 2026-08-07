@@ -1,107 +1,108 @@
-# Live Walkthrough Script (~20 minutes, code only, no slides)
+# Live Walkthrough Script (~20–25 minutes, no slides)
 
-Terminal setup: two panes/tabs — one for running commands, one you keep
-free to open source files (`app/security/pii.py`, `app/ethics/policy.py`,
-etc.) when you want to show the code behind a behavior the audience just
-saw.
+Two surfaces, one engine — use both, don't pick one:
+
+- **Browser console** (`web/banking_ai_console.html`, or the published artifact link) — what
+  the room *watches*. Click a scenario chip, the guardrail trace and audit log update live.
+  No terminal typing, no risk of a typo mid-sentence.
+- **Python source / editor** (`app/`) — what makes it a *code walkthrough*, not a UI demo.
+  Every behavior the console shows is ~10–20 lines of real code; open the file right after
+  the click that triggered it.
+
+## Setup (before the room fills up)
+
+- Browser: console open, **Console tab**, persona = "Alex — NorthStar customer", tenant =
+  NorthStar Bank. Zoom the browser to ~125% so trace text reads from the back row.
+- Editor: `BankingAI_SecurityGovernanceDemo/app/` open, with tabs pre-opened for
+  `rag/pipeline.py`, `tenancy.py`, `security/pii.py`, `security/prompt_injection.py`,
+  `ethics/policy.py`, `governance/audit_log.py` — so you switch tabs, not search files, live.
+  If you're worried about the internet, use the local `web/banking_ai_console.html` file
+  (double-click it, works with zero install) instead of the hosted artifact link.
+- Terminal: idle, `cd BankingAI_SecurityGovernanceDemo`, ready for the pytest fallback.
 
 ## 0. Orient (1 min)
 
-> "This is Pillar 4 — Security, Governance & Compliance. Instead of
-> slides, we built a real AI application for a banking domain that
-> demonstrates all five of our topics as running code: standards &
-> governance, RAG patterns, OWASP/PII security, ethical AI, and
-> multi-tenant isolation. Two solutions, one shared engine."
+> "This is Pillar 4 — Security, Governance & Compliance. Instead of slides, this is a real
+> banking AI application: two solutions, one shared guardrail engine, covering all five of
+> our topics as running code. We'll drive it live — every click on screen is backed by
+> Python you can read right after."
 
-```bash
-cd BankingAI_SecurityGovernanceDemo
-python3 -m pytest tests/ -q   # 32 tests, zero dependencies beyond pytest itself
-```
+## 1. The two solutions — problem, approach, impact (3–4 min, spoken over the console)
 
-> "That's our safety net for the rest of this walkthrough — if I break
-> something live, this is what would catch it."
+Point at the **Governance tab** (model card) while you say this — it's your only "slide,"
+and it's real data, not a deck.
 
-## 1. Solution 1 — Internal Compliance & Policy Co-Pilot (8 min)
+- **Solution 1 — Internal Compliance & Policy Co-Pilot.** Compliance officers, risk
+  analysts, and tellers need instant, trustworthy answers to policy questions (KYC/AML,
+  underwriting, fraud response) without emailing compliance and without risking a
+  hallucinated answer being treated as policy. Impact: seconds instead of a day, and every
+  answer is traceable and auditable by design.
+- **Solution 2 — Multi-Brand Customer Support Assistant.** One platform serving multiple
+  white-label bank brands (NorthStar, Meridian) — customers paste real account/card numbers
+  and fraud complaints straight into chat, so this sits directly on the OWASP LLM attack
+  surface. Impact: one platform can safely serve multiple brands/subsidiaries without a
+  cross-tenant leak or a jailbroken bot becoming a headline.
 
-```bash
-python3 scripts/demo_1_internal_compliance_copilot.py
-```
+## 2. Live console walkthrough + code (12–15 min)
 
-Talking points as each section prints:
+Work down the **scenario chips** in this order. After each click, say the one-liner, then
+(for the starred ⭐ ones) flip to the matching file for 15–20 seconds — don't read code
+line by line, just point at the function name and the one line that matters.
 
-- **Sections 1–2 (Governance):** "This is the model card and the
-  compliance matrix — not documentation we wrote separately, but data
-  structures in `app/governance/` the system can render on demand. Every
-  control maps to a named regulation: GDPR, PCI-DSS, ECOA, SOX."
-- **Section 3 (RAG):** "A grounded answer with a citation. Open
-  `app/rag/pipeline.py` for a second — chunk, embed with TF-IDF, retrieve,
-  generate, sanitize, log. No hallucination risk because the generator is
-  extractive by default."
-- **Sections 4–7 (RBAC / multi-tenant):** "Same question, three different
-  roles, three different outcomes — and it's not a permission *filter*
-  bolted on top, it's structural: a teller's query never even scores
-  against a confidential chunk." Pause on section 6 vs 7 — restricted-tier
-  document, only the compliance officer gets it.
-- **Section 8 (tenant isolation):** "This is the one to remember: a user
-  from one department cannot even *claim* to be another department. It's
-  rejected before a single row of data is touched."
-- **Section 9 (PII):** "A raw SSN and card number in the query — watch
-  what gets logged." Open `app/security/pii.py` briefly, point at the
-  Luhn check for card numbers.
-- **Section 10 (prompt injection):** "Classic injection attempt, blocked
-  before it reaches retrieval or generation."
-- **Section 11 (ethical AI):** "This is the one banks actually get sued
-  over — refusing a discrimination-adjacent underwriting question outright."
-- **Section 12 (audit log):** live-tamper the log in front of the room —
-  this is the moment that lands. "I'm mutating history. Watch the
-  integrity check flip to invalid."
+| # | Chip / action | What it proves | ⭐ Code to flash |
+|---|---|---|---|
+| 1 | **Overdraft fee** (as NorthStar customer) | Grounded RAG answer with a citation — no hallucination | ⭐ `rag/generator.py` — extractive, cites the chunk |
+| 2 | Switch persona to Jamie (Meridian), click **Overdraft fee** again | Same question, two brands, two *correct* different answers — isolation serves the right data, not just denies | — |
+| 3 | **Cross-tenant impersonation** chip | Denied outright, before any data is touched | ⭐ `tenancy.py` → `authorize()` |
+| 4 | Switch persona to Sam (Teller), click **Underwriting factors (RBAC test)** | Refuses — not because of a bug, because of clearance | ⭐ `models.py` → `role_can_read()` |
+| 5 | Switch persona to Dana (Retail risk analyst), same chip again | Same tenant, same document, different role → grounded answer | — |
+| 6 | Switch to Morgan (Compliance officer @ Risk & Compliance dept), click **Exam findings (restricted tier)** | Only the top clearance tier can read a RESTRICTED doc | — |
+| 7 | **Prompt injection attempt** chip | Blocked before it reaches retrieval or generation | ⭐ `security/prompt_injection.py` |
+| 8 | **Paste sensitive info (PII)** chip | SSN + card number redacted *before* being used or logged — point at the "Rate budget" ticking down too, that's the OWASP LLM04 control | ⭐ `security/pii.py` — Luhn check on the card |
+| 9 | **Discrimination question** chip | Refused outright — the one banks actually get sued over | ⭐ `ethics/policy.py` |
+| 10 | **Fraud report (escalation)** chip | Answered informationally *and* flagged for a human — the bot never confirms fraud itself | — |
+| 11 | Open the **Audit log** drawer, click the most recent entry, hit **"Tamper: flip allowed,"** then **Verify integrity** | The moment that lands: mutate history live, watch the hash chain catch it | ⭐ `governance/audit_log.py` — hash-chain in ~25 lines |
 
-## 2. Solution 2 — Multi-Brand Customer Support Assistant (7 min)
+Then:
+- **Governance tab** — scroll the compliance matrix: "every control on the left maps to a
+  named regulation on the right — GDPR, PCI-DSS, ECOA, SOX, EU AI Act."
+- **Attack Simulation tab** — click **Run attack simulation**: "this is how 'we have
+  guardrails' becomes measurable instead of a claim. 7/7 known cases, and two intentionally
+  left unblocked — we'll get to those in a second."
 
-```bash
-python3 scripts/demo_2_customer_support_assistant.py
-```
+## 3. Challenges, learnings, best practices (3–5 min)
 
-- **Sections 1–2:** same question, two brands, two *correct* different
-  answers (different fee schedules) — proves isolation isn't just "deny
-  access," it's "serve the right data."
-- **Section 3:** brand-spoofing attempt, denied.
-- **Section 4:** a customer pastes a real card number mid-conversation —
-  this is the realistic case, not a contrived attack.
-- **Section 5:** jailbreak attempt (DAN persona), blocked.
-- **Section 6:** "Should I invest in crypto?" — refused, out of scope for
-  an unlicensed assistant.
-- **Section 7:** a fraud report — answered informationally *and* flagged
-  for human escalation. "The bot never says 'yes that's fraud, you're
-  covered.' That's a human decision, always."
-- **Section 8:** rate limiting — burst 7 requests, watch the bucket empty.
-- **Section 9:** the full session, still one clean audit trail.
+Don't read `CHALLENGES_AND_LEARNINGS.md` — pick three real ones and tell them as stories:
 
-## 3. Attack simulation / measurable coverage (2 min)
+1. **RBAC vs. TF-IDF false positives.** A teller's ungrounded query was weakly matching the
+   *wrong* internal document instead of cleanly refusing — tuned the relevance threshold
+   against measured scores, then wrote a test to pin the boundary so it can't regress.
+2. **The two intentionally-unblocked injection cases.** A regex/heuristic scanner catches
+   *known* attack phrasing, not everything — say so in the model card instead of hiding it.
+   The mitigation is architectural (RBAC-scoped retrieval, grounded-only generation, output
+   guard), not "add more regexes until the demo passes."
+3. **Structural isolation beat query-filter isolation.** Each tenant gets its own store
+   instance, not a shared index with a `WHERE tenant_id = ?` filter — a missed filter
+   anywhere becomes a leak; a missing store instance just fails loudly.
 
-```bash
-python3 scripts/run_attack_simulation.py
-```
+Best-practice takeaway: **build the audit log first, not last** — it ended up being the
+cheapest part of the system and the highest-leverage governance artifact, because every
+other guardrail's behavior becomes provable, not just asserted.
 
-> "This is how we made 'we have guardrails' into something measurable
-> instead of a claim — a small attack corpus, pass/fail per case. Note the
-> two cases marked as a known gap at the bottom — we'll get to those in
-> lessons learned."
+## 4. Close (1 min)
 
-## 4. Q&A / open the code (2 min)
+> "Five topics, one afternoon of clicking: standards & governance in the model card and
+> compliance matrix, RAG patterns in the citation-backed answers, OWASP/PII in the redaction
+> and injection blocks, ethical AI in the refusals and escalations, and multi-tenant
+> isolation in every impersonation attempt that got denied. Questions?"
 
-Good files to have ready if asked "how does X actually work":
-- `app/rag/pipeline.py` — the whole orchestration in one place
-- `app/security/pii.py` — Luhn check, regex patterns
-- `app/governance/audit_log.py` — hash chaining
-- `app/ethics/policy.py` — the refusal/escalation rules
+## Fallback if something breaks live
 
-## Fallback if live demo fails
-
-Every script's expected output is deterministic and was captured during
-development — if something breaks live, say so, then either re-run the
-narrower `run_attack_simulation.py` (smaller blast radius) or fall back to
-walking through `app/rag/pipeline.py` and `diagrams/architecture.md`
-directly. Do not skip the audit-log tamper demo — it's low-risk (12 lines
-of deterministic code) and it's the moment that best makes the governance
-point.
+- Browser console frozen/won't load → open the local file directly
+  (`web/banking_ai_console.html`) instead of the hosted link; it's fully self-contained.
+- Browser unusable at all → fall back to the terminal:
+  `python3 scripts/demo_1_internal_compliance_copilot.py` and
+  `python3 scripts/demo_2_customer_support_assistant.py` print the identical scenarios as
+  formatted text, plus `python3 -m pytest tests/ -q` as your "it actually works" safety net.
+- Don't skip the audit-log tamper demo even under time pressure — it's the single moment
+  that best makes the governance point, and it's ~10 seconds either way.
