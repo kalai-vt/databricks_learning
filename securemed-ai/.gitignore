@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+backend/.env
+backend/securemed.db
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.env
+
+# Misc
+.DS_Store
+*.log
