@@ -12,18 +12,46 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.patient import Patient
 from app.models.ai_policy import AIPolicy
+from app.models.knowledge_document import KnowledgeDocument
 from app.security.auth import hash_password
 
 DEMO_PASSWORD = "Demo@123"
 
 POLICY_DEFS = [
     ("TENANT_ISOLATION", "Tenant Isolation", "BLOCK", "CRITICAL"),
-    ("PHI_PROTECTION", "PII/PHI Protection", "MASK", "MEDIUM"),
     ("AI_INPUT_SECURITY", "Prompt Injection Protection", "BLOCK", "CRITICAL"),
-    ("HIGH_RISK_HEALTHCARE", "High-Risk Healthcare Request", "HUMAN_REVIEW", "HIGH"),
     ("CROSS_TENANT_ACCESS", "Cross-Tenant Access", "BLOCK", "CRITICAL"),
     ("AUDIT_LOGGING", "Audit Logging", "LOG", "LOW"),
-    ("SENSITIVE_EXPORT", "Sensitive Data Export", "BLOCK", "HIGH"),
+]
+
+H1_DOCUMENTS = [
+    ("H1 Hospital Infection Control Policy", "POLICY",
+     "Policy H1-IC-2025: At H1 Hospital Chennai, all ICU and isolation-ward staff must wear PPE "
+     "Level 3 for any suspected airborne infectious case. Hand hygiene compliance is audited weekly. "
+     "Contact the H1 Infection Control Committee at infection.control@h1demo.in for exceptions."),
+    ("H1 Hospital Discharge Protocol", "PROTOCOL",
+     "Protocol H1-DC-2025: Patients at H1 Hospital Chennai may be discharged only after attending "
+     "physician sign-off, a completed medication reconciliation, and a scheduled follow-up "
+     "appointment within 14 days."),
+    ("H1 Hospital Emergency Triage Guideline", "GUIDELINE",
+     "Guideline H1-ET-2025: H1 Hospital Chennai's emergency department uses a 4-level triage scale. "
+     "Level 1 (Critical) patients must be seen within 5 minutes of arrival by the on-call emergency "
+     "physician."),
+]
+
+H2_DOCUMENTS = [
+    ("H2 Hospital Infection Control Policy", "POLICY",
+     "Policy H2-IC-2025: At H2 Hospital Bengaluru, all ICU and isolation-ward staff must wear PPE "
+     "Level 2 for suspected airborne infectious cases, escalating to Level 3 for confirmed cases. "
+     "Contact the H2 Infection Control Committee at infection.control@h2demo.in for exceptions."),
+    ("H2 Hospital Discharge Protocol", "PROTOCOL",
+     "Protocol H2-DC-2025: Patients at H2 Hospital Bengaluru may be discharged after attending "
+     "physician sign-off and a completed medication reconciliation; follow-up appointments are "
+     "scheduled within 21 days."),
+    ("H2 Hospital Emergency Triage Guideline", "GUIDELINE",
+     "Guideline H2-ET-2025: H2 Hospital Bengaluru's emergency department uses a 5-level triage "
+     "scale. Level 1 (Resuscitation) patients must be seen immediately by the on-call emergency "
+     "physician."),
 ]
 
 H1_PATIENTS = [
@@ -101,5 +129,9 @@ def seed_if_empty(db: Session) -> None:
     for tenant in (h1, h2):
         for code, name, action, risk in POLICY_DEFS:
             db.add(AIPolicy(tenant_id=tenant.id, policy_code=code, policy_name=name, action=action, enabled=True, risk_level=risk))
+
+    for tenant, docs in [(h1, H1_DOCUMENTS), (h2, H2_DOCUMENTS)]:
+        for title, category, content in docs:
+            db.add(KnowledgeDocument(tenant_id=tenant.id, title=title, category=category, content=content))
 
     db.commit()

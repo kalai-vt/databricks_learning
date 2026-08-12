@@ -1,16 +1,12 @@
-import { CheckCircle2, XCircle, EyeOff, UserCheck } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 const CONFIG: Record<string, { label: string; classes: string; icon: any }> = {
   ALLOW: { label: "ALLOWED", classes: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
   BLOCK: { label: "BLOCKED", classes: "bg-red-100 text-red-700", icon: XCircle },
-  MASK: { label: "MASKED", classes: "bg-amber-100 text-amber-700", icon: EyeOff },
-  HUMAN_REVIEW: { label: "HUMAN REVIEW", classes: "bg-violet-100 text-violet-700", icon: UserCheck },
 };
 
 const RISK_CLASSES: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-600",
-  MEDIUM: "bg-amber-100 text-amber-700",
-  HIGH: "bg-orange-100 text-orange-700",
   CRITICAL: "bg-red-100 text-red-700",
 };
 
@@ -26,4 +22,10 @@ export function ActionBadge({ action }: { action: string }) {
 
 export function RiskBadge({ risk }: { risk: string }) {
   return <span className={`badge ${RISK_CLASSES[risk] ?? "bg-slate-100 text-slate-600"}`}>{risk}</span>;
+}
+
+export function ToolBadge({ tool }: { tool: "SQL" | "RAG" | null }) {
+  if (!tool) return <span className="badge bg-slate-100 text-slate-400">Tool: none (blocked before agent)</span>;
+  const classes = tool === "SQL" ? "bg-blue-100 text-blue-700" : "bg-violet-100 text-violet-700";
+  return <span className={`badge ${classes}`}>{tool} Tool</span>;
 }

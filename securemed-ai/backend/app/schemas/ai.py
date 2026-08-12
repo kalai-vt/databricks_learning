@@ -1,4 +1,3 @@
-from typing import Any
 from pydantic import BaseModel
 
 
@@ -9,13 +8,18 @@ class ChatRequest(BaseModel):
 class TraceStep(BaseModel):
     step: int
     label: str
-    status: str  # PASS | FAIL | SKIPPED
+    status: str  # PASS | FAIL | SKIPPED | BLOCKED | N/A
     detail: str
 
 
+class RetrievedDocument(BaseModel):
+    title: str
+    score: float
+
+
 class ChatResponse(BaseModel):
-    action: str  # ALLOW | BLOCK | MASK | HUMAN_REVIEW
-    risk_level: str  # LOW | MEDIUM | HIGH | CRITICAL
+    action: str  # ALLOW | BLOCK
+    risk_level: str  # LOW | CRITICAL
     policy_code: str
     policies_triggered: list[str] = []
     message: str
@@ -23,6 +27,7 @@ class ChatResponse(BaseModel):
     model: str
     provider: str
     mock_mode: bool
+    tool_used: str | None = None  # "SQL" | "RAG" | None
+    retrieved_documents: list[RetrievedDocument] = []
     trace: list[TraceStep]
-    pii_detected: list[dict[str, Any]] = []
-    cross_tenant: dict[str, Any] | None = None
+    cross_tenant: dict | None = None

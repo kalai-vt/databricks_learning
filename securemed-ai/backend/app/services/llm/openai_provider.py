@@ -89,6 +89,17 @@ class OpenAIProvider(LLMProvider):
 
     def _mock_response(self, prompt: str, context: dict) -> str:
         tenant_name = context.get("tenant_name", "your hospital")
+        if "documents" in context:
+            docs = context.get("documents", "")
+            if not docs or docs == "(no matching documents)":
+                return (
+                    f"[DEMO / MOCK MODE] No matching documents were found in {tenant_name}'s "
+                    f"tenant-isolated knowledge base for this question."
+                )
+            return (
+                f"[DEMO / MOCK MODE] Based only on documents retrieved from {tenant_name}'s "
+                f"tenant-isolated knowledge base:\n\n{docs}"
+            )
         if "admission" in prompt.lower() or "admitted" in prompt.lower():
             count = context.get("admissions_this_month", "several")
             return (
