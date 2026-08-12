@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.audit_log import AuditLog
 from app.models.user import User
-from app.security.rbac import require_any_authenticated
+from app.security.rbac import require_any_authenticated, require_hospital_user
 from app.security.tenant_context import TenantContext
 
 router = APIRouter(prefix="/api/audit", tags=["audit"])
@@ -33,6 +33,20 @@ def list_audit_logs(
 
     rows = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
     return {"logs": [_serialize(db, r) for r in rows]}
+
+
+@router.delete("/logs")
+def clear_audit_logs(
+    ctx: TenantContext = Depends(require_hospital_user),
+    db: Session = Depends(get_db),
+):
+    """Demo-mode reset: clears this tenant's audit log so a presenter can
+    start the scripted narrative from a clean slate. Scoped to the
+    authenticated tenant like every other query in this app — it can never
+    touch another tenant's history."""
+    deleted = db.query(AuditLog).filter(AuditLog.tenant_id == ctx.tenant_id).delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": deleted}
 
 
 def _serialize(db: Session, entry: AuditLog) -> dict:

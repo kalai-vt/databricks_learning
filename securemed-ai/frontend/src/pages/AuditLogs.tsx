@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ScrollText, Search, CheckCircle2, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { ScrollText, Search, CheckCircle2, XCircle, Trash2, Loader2 } from "lucide-react";
 import { api } from "../services/api";
 import { ActionBadge, RiskBadge, ToolBadge } from "../components/ActionBadge";
 
@@ -14,13 +14,27 @@ export default function AuditLogs() {
   const [riskFilter, setRiskFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [clearing, setClearing] = useState(false);
 
-  useEffect(() => {
+  const fetchLogs = useCallback(() => {
     const params = new URLSearchParams();
     if (riskFilter) params.set("risk", riskFilter);
     if (actionFilter) params.set("action", actionFilter);
     api.get<{ logs: LogRow[] }>(`/audit/logs?${params.toString()}`).then((d) => setLogs(d.logs));
   }, [riskFilter, actionFilter]);
+
+  useEffect(fetchLogs, [fetchLogs]);
+
+  async function clearAuditData() {
+    if (!window.confirm("Clear all audit log entries for H1 Hospital? This cannot be undone.")) return;
+    setClearing(true);
+    try {
+      await api.del("/audit/logs");
+      fetchLogs();
+    } finally {
+      setClearing(false);
+    }
+  }
 
   const filtered = logs.filter((l) => (l.request_text ?? "").toLowerCase().includes(search.toLowerCase()));
   const allowedCount = logs.filter((l) => l.action === "ALLOW").length;
@@ -28,9 +42,19 @@ export default function AuditLogs() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2"><ScrollText size={20} /> Audit Logging &amp; Monitoring</h1>
-        <p className="text-sm text-slate-500">Every AI request — allowed or blocked — is recorded here, including which tool it used and why.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2"><ScrollText size={20} /> Audit Logging &amp; Monitoring</h1>
+          <p className="text-sm text-slate-500">Every AI request — allowed or blocked — is recorded here, including which tool it used and why.</p>
+        </div>
+        <button
+          onClick={clearAuditData}
+          disabled={clearing || logs.length === 0}
+          className="flex items-center gap-1.5 text-sm font-medium border border-red-200 text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {clearing ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
+          Clear Audit Data
+        </button>
       </div>
 
       <div className="flex gap-4">
