@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -35,6 +37,12 @@ def list_audit_logs(
 
 def _serialize(db: Session, entry: AuditLog) -> dict:
     user = db.query(User).filter(User.id == entry.user_id).first()
+    tool_used = None
+    if entry.details:
+        try:
+            tool_used = json.loads(entry.details).get("tool_used") or json.loads(entry.details).get("attempted_tool")
+        except (json.JSONDecodeError, AttributeError):
+            tool_used = None
     return {
         "id": entry.id,
         "timestamp": entry.timestamp.isoformat(),
@@ -47,4 +55,5 @@ def _serialize(db: Session, entry: AuditLog) -> dict:
         "risk_level": entry.risk_level,
         "action": entry.action,
         "model": entry.model,
+        "tool_used": tool_used,
     }

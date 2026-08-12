@@ -18,7 +18,7 @@ from app.models.patient import Patient
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.models.security_event import SecurityEvent
+from app.models.knowledge_document import KnowledgeDocument
 
 
 def get_tenant_patients(db: Session, tenant_id: int) -> list[Patient]:
@@ -54,7 +54,8 @@ def tenant_stats(db: Session, tenant_id: int) -> dict:
         "location": tenant.location if tenant else None,
         "users": db.query(User).filter(User.tenant_id == tenant_id).count(),
         "patients": count_tenant_patients(db, tenant_id),
+        "documents": db.query(KnowledgeDocument).filter(KnowledgeDocument.tenant_id == tenant_id).count(),
         "ai_requests": db.query(AuditLog).filter(AuditLog.tenant_id == tenant_id, AuditLog.event_type == "AI_REQUEST").count(),
-        "security_events": db.query(SecurityEvent).filter(SecurityEvent.tenant_id == tenant_id).count(),
+        "blocked_requests": db.query(AuditLog).filter(AuditLog.tenant_id == tenant_id, AuditLog.action == "BLOCK").count(),
         "status": tenant.status if tenant else None,
     }

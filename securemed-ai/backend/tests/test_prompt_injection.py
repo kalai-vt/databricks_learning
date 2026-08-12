@@ -27,16 +27,3 @@ def test_chat_blocks_prompt_injection(client):
     assert "AI_INPUT_SECURITY" in body["policies_triggered"]
     assert "SECRET_PROTECTION" in body["policies_triggered"]
     assert "TENANT_ISOLATION" in body["policies_triggered"]
-
-
-def test_chat_high_risk_healthcare_requires_human_review(client):
-    headers = auth_headers(client, "meera@h2.demo")
-    resp = client.post(
-        "/api/ai/chat",
-        json={"message": "Recommend treatment for this patient."},
-        headers=headers,
-    )
-    body = resp.json()
-    assert body["action"] == "HUMAN_REVIEW"
-    assert body["risk_level"] == "HIGH"
-    assert body["llm_invoked"] is False

@@ -14,9 +14,14 @@ export interface TraceStep {
   detail: string;
 }
 
+export interface RetrievedDocument {
+  title: string;
+  score: number;
+}
+
 export interface ChatResponse {
-  action: "ALLOW" | "BLOCK" | "MASK" | "HUMAN_REVIEW";
-  risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  action: "ALLOW" | "BLOCK";
+  risk_level: "LOW" | "CRITICAL";
   policy_code: string;
   policies_triggered: string[];
   message: string;
@@ -24,8 +29,9 @@ export interface ChatResponse {
   model: string;
   provider: string;
   mock_mode: boolean;
+  tool_used: "SQL" | "RAG" | null;
+  retrieved_documents: RetrievedDocument[];
   trace: TraceStep[];
-  pii_detected: { field: string; patient: string; masked: string }[];
   cross_tenant: { authenticated_tenant: string; requested_tenant: string } | null;
 }
 

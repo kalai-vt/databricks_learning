@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app import models  # noqa: F401  (ensures models are registered before create_all)
-from app.api import auth, ai, tenants, governance, security_center, audit, model_config, overview
+from app.api import auth, ai, tenants, audit
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("securemed")
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SecureMed AI",
-    description="Ethical AI & Multi-Tenant Security Governance Demonstration Platform. "
+    description="Multi-Tenant Isolation Security Demonstration for LLM Applications. "
     "DEMO ENVIRONMENT — SYNTHETIC HEALTHCARE DATA — NOT FOR MEDICAL USE.",
     version="1.0.0",
     lifespan=lifespan,
@@ -62,8 +62,4 @@ def health():
 app.include_router(auth.router)
 app.include_router(ai.router)
 app.include_router(tenants.router)
-app.include_router(governance.router)
-app.include_router(security_center.router)
 app.include_router(audit.router)
-app.include_router(model_config.router)
-app.include_router(overview.router)

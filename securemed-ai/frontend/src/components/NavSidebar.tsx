@@ -1,20 +1,10 @@
 import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard, MessageSquareText, Building2, ShieldCheck, Radar,
-  ScrollText, Cpu, Network, PlayCircle, Globe2,
-} from "lucide-react";
+import { MessageSquareText, Network, ScrollText } from "lucide-react";
 
 const NAV_ITEMS = [
-  { to: "/overview", label: "Overview", icon: LayoutDashboard },
   { to: "/assistant", label: "AI Assistant", icon: MessageSquareText },
-  { to: "/tenants", label: "Tenants", icon: Building2 },
-  { to: "/governance", label: "Governance", icon: ShieldCheck },
-  { to: "/security", label: "Security Center", icon: Radar },
-  { to: "/audit", label: "Audit Logs", icon: ScrollText },
-  { to: "/model", label: "Model", icon: Cpu },
   { to: "/architecture", label: "Architecture", icon: Network },
-  { to: "/guided-demo", label: "Guided Demo", icon: PlayCircle },
-  { to: "/saas-use-cases", label: "SaaS Use Cases", icon: Globe2 },
+  { to: "/audit", label: "Audit Log", icon: ScrollText },
 ];
 
 export default function NavSidebar() {

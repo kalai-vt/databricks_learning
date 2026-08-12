@@ -7,18 +7,10 @@ def test_doctor_can_use_ai_assistant(client):
     assert resp.status_code == 200
 
 
-def test_doctor_cannot_toggle_policy(client):
-    headers = auth_headers(client, "arun@h1.demo")
-    resp = client.post("/api/governance/policies/PHI_PROTECTION/toggle", headers=headers)
-    assert resp.status_code == 403
-
-
-def test_hospital_admin_can_toggle_policy(client):
+def test_hospital_admin_can_use_ai_assistant(client):
     headers = auth_headers(client, "priya@h1.demo")
-    resp = client.post("/api/governance/policies/PHI_PROTECTION/toggle", headers=headers)
+    resp = client.post("/api/ai/chat", json={"message": "How many patients were admitted this month?"}, headers=headers)
     assert resp.status_code == 200
-    # toggle back to leave state clean for other tests
-    client.post("/api/governance/policies/PHI_PROTECTION/toggle", headers=headers)
 
 
 def test_hospital_admin_can_view_audit_logs(client):
@@ -38,7 +30,8 @@ def test_super_admin_can_view_tenants(client):
 
 def test_super_admin_cannot_use_ai_assistant_hospital_endpoint(client):
     """Super Admin has no hospital tenant scope, so the hospital-data AI
-    endpoint (which requires a concrete tenant) correctly rejects it."""
+    endpoint (which requires a concrete tenant) correctly rejects it —
+    RBAC + RLS are enforced together, not just RBAC alone."""
     headers = auth_headers(client, "admin@securemed.demo")
     resp = client.post("/api/ai/chat", json={"message": "hello"}, headers=headers)
     assert resp.status_code == 403

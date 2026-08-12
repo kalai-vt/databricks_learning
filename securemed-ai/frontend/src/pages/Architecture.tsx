@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Network, ArrowDown, XCircle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Network, ArrowDown, XCircle, CheckCircle2, Building2, Lock, ShieldCheck } from "lucide-react";
+import { api } from "../services/api";
 
 interface Component {
   id: string;
@@ -10,23 +11,46 @@ interface Component {
   threat_prevented: string;
 }
 
-const PIPELINE: Component[] = [
-  { id: "auth", label: "Authentication / JWT", purpose: "Confirm the caller is a known, active user.", security_function: "Identity verification", implementation: "Bcrypt password hashing + signed JWT session tokens", threat_prevented: "Anonymous / unauthenticated access" },
-  { id: "tenant", label: "Tenant Context", purpose: "Derive which hospital this request belongs to.", security_function: "Server-side tenant binding", implementation: "tenant_code embedded in JWT at login, read-only afterwards", threat_prevented: "Client-supplied tenant_id spoofing" },
-  { id: "rbac", label: "RBAC", purpose: "Confirm the user's role permits this action.", security_function: "Authorization", implementation: "Role dependency checks on every route (Doctor / Hospital Admin / Super Admin)", threat_prevented: "Privilege escalation" },
-  { id: "pii", label: "PII/PHI Detection", purpose: "Detect requests for sensitive patient fields.", security_function: "Data minimization", implementation: "Keyword + patient-record matching, field-level masking", threat_prevented: "Sensitive data leakage to LLM/user" },
-  { id: "injection", label: "Prompt Injection Detection", purpose: "Detect attempts to override system instructions.", security_function: "Input security", implementation: "Deterministic pattern matching before the LLM is ever called", threat_prevented: "Jailbreaks, secret exfiltration" },
-  { id: "risk", label: "Risk Classification", purpose: "Classify request severity.", security_function: "Risk-based governance", implementation: "Keyword-based high-risk healthcare detection", threat_prevented: "Unsupervised medical decisions" },
-  { id: "policy", label: "Policy Engine", purpose: "Apply the tenant's configured governance policies.", security_function: "Governance", implementation: "Per-tenant, toggleable policy table (ai_policies)", threat_prevented: "Inconsistent or missing enforcement" },
-  { id: "isolation", label: "Tenant Isolation", purpose: "Block any cross-tenant reference.", security_function: "Multi-tenant security", implementation: "Tenant-code mention detection + tenant-scoped queries", threat_prevented: "Cross-tenant data access" },
-  { id: "db", label: "Tenant-Scoped Database", purpose: "Retrieve only this tenant's data.", security_function: "Data isolation", implementation: "WHERE tenant_id = authenticated_tenant_id on every query", threat_prevented: "Accidental or malicious cross-tenant reads" },
-  { id: "llm", label: "LLM Provider", purpose: "Generate a natural-language answer.", security_function: "Model-agnostic generation", implementation: "LLMProvider interface -> OpenAIProvider (GPT-4o-mini)", threat_prevented: "Vendor lock-in; LLM never decides authorization" },
-  { id: "validate", label: "Response Validation", purpose: "Re-check LLM output before it reaches the user.", security_function: "Output security", implementation: "Regex re-scan for emails/phone numbers before display", threat_prevented: "PII leakage via model output" },
-  { id: "audit", label: "Audit Log", purpose: "Record every decision.", security_function: "Accountability", implementation: "audit_logs + security_events tables for every ALLOW/BLOCK/MASK/HUMAN_REVIEW", threat_prevented: "Undetected misuse; no forensic trail" },
+const LINEAR_STAGES: Component[] = [
+  { id: "auth", label: "Authentication (JWT / OAuth)", purpose: "Confirm the caller is a known, active user.", security_function: "Identity verification", implementation: "Bcrypt password hashing + signed JWT session tokens", threat_prevented: "Anonymous / unauthenticated access" },
+  { id: "tenant", label: "Tenant Context (H1 / H2)", purpose: "Derive which hospital this request belongs to.", security_function: "Server-side tenant binding", implementation: "tenant_code embedded in JWT at login, read-only afterwards — never re-derived from the prompt", threat_prevented: "Client- or prompt-supplied tenant_id spoofing" },
+  { id: "authz", label: "Authorization (RBAC + RLS)", purpose: "Confirm the user's role permits this action, and pin every downstream query to their tenant.", security_function: "Access control", implementation: "Role dependency checks on every route + tenant_id captured for use as a Row-Level Security predicate", threat_prevented: "Privilege escalation and missing tenant filters" },
+  { id: "agent", label: "LLM / Agent", purpose: "Interpret the request and decide which tool can answer it.", security_function: "Orchestration only — never authorization", implementation: "LLMProvider abstraction (GPT-4o-mini via OpenAI today); the agent picks a tool, it does not pick a tenant", threat_prevented: "LLM being trusted as a security boundary" },
 ];
 
+const TOOL_BRANCHES = {
+  sql: {
+    id: "sql", label: "SQL Tool", filterLabel: "RLS Filter", storeLabel: "Database",
+    purpose: "Answer structured/statistical questions (counts, admissions).",
+    security_function: "Row-Level Security enforcement",
+    implementation: "SELECT ... FROM patients WHERE tenant_id = authenticated_tenant_id — filter applied server-side, before the query runs",
+    threat_prevented: "Cross-tenant row leakage via a manipulated prompt",
+  },
+  rag: {
+    id: "rag", label: "RAG Tool", filterLabel: "Tenant Filter", storeLabel: "Vector Database",
+    purpose: "Answer knowledge/policy questions from hospital documents.",
+    security_function: "Tenant-namespaced retrieval",
+    implementation: "Similarity search runs only over documents WHERE tenant_id = authenticated_tenant_id, before ranking",
+    threat_prevented: "Cross-tenant document leakage through semantic search",
+  },
+};
+
+const FINAL_STAGE: Component = {
+  id: "audit", label: "Audit Logging", purpose: "Record every decision, allowed or blocked.", security_function: "Accountability", implementation: "Every request writes an audit_logs row: tenant, user, tool used, action, risk, policy", threat_prevented: "Undetected misuse; no forensic trail",
+};
+
+interface TenantRow {
+  tenant_code: string; tenant_name: string; location: string; status: string; accessible: boolean;
+  patients?: number; documents?: number; reason?: string;
+}
+
 export default function Architecture() {
-  const [selected, setSelected] = useState<Component>(PIPELINE[0]);
+  const [selected, setSelected] = useState<Component>(LINEAR_STAGES[0]);
+  const [tenants, setTenants] = useState<TenantRow[]>([]);
+
+  useEffect(() => {
+    api.get<{ tenants: TenantRow[] }>("/tenants").then((d) => setTenants(d.tenants)).catch(() => {});
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -40,23 +64,36 @@ export default function Architecture() {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card p-4">
           <div className="flex flex-col items-center gap-1">
-            <PipelineNode label="USER" />
+            <PipelineNode label="USER / UI" />
             <ArrowDown size={16} className="text-slate-300" />
-            {PIPELINE.map((c, i) => (
+            {LINEAR_STAGES.map((c) => (
               <div key={c.id} className="flex flex-col items-center gap-1 w-full">
-                <button
-                  onClick={() => setSelected(c)}
-                  className={`w-full max-w-md text-sm font-medium rounded-lg border px-3 py-2 transition-colors ${
-                    selected.id === c.id ? "border-brand-500 bg-brand-50 text-brand-800" : "border-slate-200 hover:bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  {c.label}
-                </button>
-                {i < PIPELINE.length - 1 && <ArrowDown size={16} className="text-slate-300" />}
+                <StageButton c={c} selected={selected} onSelect={setSelected} />
+                <ArrowDown size={16} className="text-slate-300" />
               </div>
             ))}
+
+            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+              {(["sql", "rag"] as const).map((key) => {
+                const tool = TOOL_BRANCHES[key];
+                const filterNode: Component = { id: `${key}-filter`, label: tool.filterLabel, purpose: `Enforce tenant scope for the ${tool.label}.`, security_function: tool.security_function, implementation: tool.implementation, threat_prevented: tool.threat_prevented };
+                const storeNode: Component = { id: `${key}-store`, label: tool.storeLabel, purpose: `Where ${tool.label} results physically live, already tenant-partitioned.`, security_function: "Data isolation at rest", implementation: key === "sql" ? "Single tenant-scoped SQL table, filtered before every read" : "Documents tagged with tenant_id; queried as a per-tenant namespace", threat_prevented: "Direct cross-tenant reads" };
+                return (
+                  <div key={key} className="flex flex-col items-center gap-1">
+                    <StageButton c={{ id: tool.id, label: tool.label, purpose: `See: ${tool.label} above.`, security_function: tool.security_function, implementation: tool.implementation, threat_prevented: tool.threat_prevented }} selected={selected} onSelect={setSelected} />
+                    <ArrowDown size={14} className="text-slate-300" />
+                    <StageButton c={filterNode} selected={selected} onSelect={setSelected} small />
+                    <ArrowDown size={14} className="text-slate-300" />
+                    <StageButton c={storeNode} selected={selected} onSelect={setSelected} small />
+                  </div>
+                );
+              })}
+            </div>
+
             <ArrowDown size={16} className="text-slate-300" />
-            <PipelineNode label="USER" />
+            <StageButton c={FINAL_STAGE} selected={selected} onSelect={setSelected} />
+            <ArrowDown size={16} className="text-slate-300" />
+            <PipelineNode label="USER / UI" />
           </div>
         </div>
 
@@ -79,9 +116,9 @@ export default function Architecture() {
             <ArrowDown size={14} className="text-slate-300" />
             <Node text="tenant_id read from prompt" tone="red" />
             <ArrowDown size={14} className="text-slate-300" />
-            <Node text="Database" tone="red" />
+            <Node text="SQL / Vector Database" tone="red" />
           </div>
-          <p className="text-xs text-red-600 mt-3 italic">Never trust tenant identity supplied by the user.</p>
+          <p className="text-xs text-red-600 mt-3 italic">Never trust tenant identity supplied by the user or the LLM.</p>
         </div>
 
         <div className="card p-4 border-2 border-emerald-200">
@@ -93,12 +130,39 @@ export default function Architecture() {
             <ArrowDown size={14} className="text-slate-300" />
             <Node text="Server-side Tenant Context" tone="emerald" />
             <ArrowDown size={14} className="text-slate-300" />
-            <Node text="Authorization" tone="emerald" />
+            <Node text="Authorization (RBAC + RLS)" tone="emerald" />
             <ArrowDown size={14} className="text-slate-300" />
-            <Node text="Tenant-scoped Query" tone="emerald" />
+            <Node text="Tenant-scoped Tool Call (SQL / RAG)" tone="emerald" />
             <ArrowDown size={14} className="text-slate-300" />
-            <Node text="Database" tone="emerald" />
+            <Node text="SQL / Vector Database" tone="emerald" />
           </div>
+        </div>
+      </div>
+
+      <div className="card p-5">
+        <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2"><ShieldCheck size={16} className="text-emerald-600" /> Live Tenant Isolation Proof</h3>
+        <p className="text-xs text-slate-500 mb-4">Logged in as an H1 user, this is exactly what the API returns for /api/tenants — H1 is fully visible, H2 is protected.</p>
+        <div className="grid md:grid-cols-2 gap-4">
+          {tenants.map((t) => (
+            <div key={t.tenant_code} className={`rounded-lg border-2 p-4 ${t.accessible ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-slate-50"}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 font-semibold text-slate-800">
+                  <Building2 size={14} /> {t.tenant_name} <span className="text-xs font-mono text-slate-400">({t.tenant_code})</span>
+                </div>
+                <span className={`badge ${t.accessible ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>{t.status}</span>
+              </div>
+              {t.accessible ? (
+                <div className="text-sm text-slate-600 flex gap-4">
+                  <span>Patients: <strong>{t.patients}</strong></span>
+                  <span>Documents: <strong>{t.documents}</strong></span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Lock size={14} className="text-red-400" /> {t.reason ?? "Cross-tenant access blocked"}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -107,6 +171,19 @@ export default function Architecture() {
 
 function PipelineNode({ label }: { label: string }) {
   return <div className="bg-slate-800 text-white text-xs font-bold rounded-full px-4 py-1.5">{label}</div>;
+}
+
+function StageButton({ c, selected, onSelect, small }: { c: Component; selected: Component; onSelect: (c: Component) => void; small?: boolean }) {
+  return (
+    <button
+      onClick={() => onSelect(c)}
+      className={`w-full ${small ? "max-w-[220px] text-xs py-1.5" : "max-w-md text-sm py-2"} font-medium rounded-lg border px-3 transition-colors ${
+        selected.id === c.id ? "border-brand-500 bg-brand-50 text-brand-800" : "border-slate-200 hover:bg-slate-50 text-slate-700"
+      }`}
+    >
+      {c.label}
+    </button>
+  );
 }
 
 function Node({ text, tone }: { text: string; tone: "red" | "emerald" }) {
