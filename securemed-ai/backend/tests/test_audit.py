@@ -32,3 +32,21 @@ def test_blocked_cross_tenant_request_captures_both_tenants_in_audit_details(cli
     blocked = [l for l in logs if l["action"] == "BLOCK" and l["policy_code"] == "TENANT_ISOLATION"]
     assert len(blocked) > 0
     assert blocked[0]["risk_level"] == "CRITICAL"
+
+
+def test_clear_audit_data_removes_only_own_tenant_logs(client):
+    h1_headers = auth_headers(client, "arun@h1.demo")
+    h2_headers = auth_headers(client, "meera@h2.demo")
+
+    client.post("/api/ai/chat", json={"message": "How many patients were admitted this month?"}, headers=h1_headers)
+    client.post("/api/ai/chat", json={"message": "How many patients were admitted this month?"}, headers=h2_headers)
+
+    resp = client.delete("/api/audit/logs", headers=h1_headers)
+    assert resp.status_code == 200
+    assert resp.json()["deleted"] > 0
+
+    h1_logs = client.get("/api/audit/logs", headers=h1_headers).json()["logs"]
+    assert h1_logs == []
+
+    h2_logs = client.get("/api/audit/logs", headers=h2_headers).json()["logs"]
+    assert len(h2_logs) > 0
